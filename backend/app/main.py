@@ -22,6 +22,8 @@ from sqlalchemy import (Boolean, DateTime, ForeignKey, Integer, Numeric, String,
                         Text, UniqueConstraint, create_engine, select, func, inspect, text)
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
+from app.database_monitor import create_monitor_router
+
 
 load_dotenv()
 
@@ -307,6 +309,7 @@ def admin_order_json(order: Order, user: User, address: Address):
 
 
 app = FastAPI(title="Passo Certo API", version="1.0.0", docs_url="/docs", redoc_url=None)
+app.include_router(create_monitor_router(engine))
 origins = [x.strip() for x in os.getenv("FRONTEND_ORIGINS", "http://localhost:5500,http://127.0.0.1:5500").split(",") if x.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["Content-Type", "X-CSRF-Token"])
 login_attempts: dict[str, deque[float]] = defaultdict(deque)
@@ -315,7 +318,6 @@ login_attempts: dict[str, deque[float]] = defaultdict(deque)
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(engine)
-    # Additive migration for databases created before product photos were supported.
     product_columns = {column["name"] for column in inspect(engine).get_columns("products")}
     product_additions = {
         "image_url": "VARCHAR(500) NOT NULL DEFAULT ''",
@@ -513,7 +515,6 @@ def pay_order_demo(order_id: int, data: DemoPaymentIn, db: Session = Depends(db_
 
 @app.post("/api/v1/addresses", status_code=201)
 def create_address(data: AddressIn, db: Session = Depends(db_session), user: User = Depends(get_current_user), _: None = Depends(require_csrf)):
-    # Encrypt raw PII at rest. CPF HMAC supports private lookups without storing plaintext.
     lookup = cpf_hmac(data.cpf)
     address = Address(user_id=user.id, recipient_cipher=cipher.encrypt(data.recipient.encode()).decode(), cpf_cipher=cipher.encrypt(data.cpf.encode()).decode(), cpf_lookup=lookup,
         postal_code_cipher=cipher.encrypt(data.postal_code.encode()).decode(), street_cipher=cipher.encrypt(data.street.encode()).decode(),
@@ -589,4 +590,3 @@ def update_order_status(order_id: int, data: OrderStatusIn, db: Session = Depend
             inv = db.scalar(select(Inventory).where(Inventory.product_id == line.product_id, Inventory.size == line.size).with_for_update())
             if inv: inv.quantity += line.quantity
     o.status = data.status; db.commit(); return {"order": order_json(o)}
-
