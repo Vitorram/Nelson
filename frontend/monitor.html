@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Passo Certo — Monitor do Banco</title>
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="monitor.css">
+  <script src="database-monitor.js" defer></script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="logo.svg" alt=""> PASSO <b>CERTO</b></a>
+    <a class="back" href="index.html">← Voltar para a loja</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">DATABASE / LIVE MONITOR</p>
+        <h1>Monitor do Banco</h1>
+        <p>Acompanhe as movimentações do MySQL em tempo real. A tela é somente leitura e não expõe dados sensíveis.</p>
+      </div>
+      <div id="connection" class="status"><i></i> CONECTANDO</div>
+    </section>
+
+    <section id="metrics" class="metrics"></section>
+
+    <section class="grid">
+      <article class="panel tables-panel">
+        <div class="panel-head"><div><p class="eyebrow">ESTRUTURA</p><h2>Tabelas</h2></div><span id="updated">--</span></div>
+        <div id="tables" class="tables"></div>
+      </article>
+
+      <article class="panel activity-panel">
+        <div class="panel-head"><div><p class="eyebrow">AUDITORIA</p><h2>Últimas movimentações</h2></div><span>2s</span></div>
+        <div class="filters">
+          <button class="filter active" data-filter="ALL">TODAS</button>
+          <button class="filter" data-filter="INSERT">INSERT</button>
+          <button class="filter" data-filter="UPDATE">UPDATE</button>
+          <button class="filter" data-filter="DELETE">DELETE</button>
+        </div>
+        <div id="activity" class="activity"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
