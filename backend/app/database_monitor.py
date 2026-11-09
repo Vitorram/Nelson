@@ -19,7 +19,7 @@ HIDDEN_COLUMN_PARTS = (
 def _identifier(value: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9_]+", value):
         raise HTTPException(400, "Identificador inválido")
-    return f"\`{value}\`"
+    return f"`{value}`"
 
 
 def _tables(engine) -> list[str]:
