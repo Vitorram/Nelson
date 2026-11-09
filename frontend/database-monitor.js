@@ -23,7 +23,7 @@
     try {
       const data = await api('/monitor');
       connection(true);
-      const normalized = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+      const normalized = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
       const countFor = (names) => {
         const item = data.tables.find(table => names.includes(normalized(table.table)));
         return item ? item.count : 0;
