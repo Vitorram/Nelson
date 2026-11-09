@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Passo Certo — Explorador MySQL</title>
+  <title>Passo Certo — Resumo do Sistema</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="monitor.css?v=20261109-3">
-  <script src="database-monitor.js?v=20261109-3" defer></script>
+  <link rel="stylesheet" href="monitor.css?v=20261109-4">
+  <script src="database-monitor.js?v=20261109-4" defer></script>
 </head>
 <body>
   <header>
@@ -16,56 +16,21 @@
   <main>
     <section class="hero">
       <div>
-        <p class="eyebrow">DATABASE / PUBLIC EXPLORER</p>
-        <h1>Explorador do Banco</h1>
-        <p>Visualização pública do schema, estrutura, índices, relacionamentos e registros permitidos do MySQL. Consultas somente leitura, sem necessidade de login.</p>
+        <p class="eyebrow">PASSO CERTO / PAINEL PÚBLICO</p>
+        <h1>Resumo do Sistema</h1>
+        <p>Acompanhe os principais números da loja em tempo real.</p>
       </div>
       <div id="connection" class="status"><i></i> CONECTANDO</div>
     </section>
 
     <section class="overview">
       <div class="overview-heading">
-        <div><p class="eyebrow">RESUMO DO SISTEMA</p><h2>Visão geral da loja</h2></div>
-        <p>Indicadores atualizados automaticamente</p>
+        <div><p class="eyebrow">INDICADORES PRINCIPAIS</p><h2>Visão geral da loja</h2></div>
+        <p>Atualizado automaticamente</p>
       </div>
       <section id="metrics" class="metrics" aria-label="Indicadores principais"></section>
-      <div id="database-meta" class="database-meta"></div>
     </section>
 
-    <section class="workspace">
-      <aside class="panel navigator">
-        <div class="panel-head"><div><p class="eyebrow">SCHEMA</p><h2>Tabelas</h2></div><button id="refresh" class="ghost" type="button">ATUALIZAR</button></div>
-        <div id="tables" class="tables"><p class="muted">Carregando...</p></div>
-      </aside>
-
-      <section class="panel explorer">
-        <div class="panel-head selected-head">
-          <div><p class="eyebrow">TABLE INSPECTOR</p><h2 id="selected-table">Selecione uma tabela</h2></div>
-          <span id="table-count"></span>
-        </div>
-        <div class="tabs">
-          <button class="tab active" data-tab="data" type="button">Dados</button>
-          <button class="tab" data-tab="structure" type="button">Estrutura</button>
-          <button class="tab" data-tab="relations" type="button">Relacionamentos</button>
-        </div>
-        <section id="data-view" class="view">
-          <div class="toolbar">
-            <input id="search" type="search" placeholder="Pesquisar nos campos..." aria-label="Pesquisar nos campos">
-            <button id="search-button" class="action" type="button">PESQUISAR</button>
-          </div>
-          <div id="data-grid" class="table-scroll"><p class="muted">Escolha uma tabela à esquerda.</p></div>
-          <div class="pagination"><span id="page-info"></span><div><button id="prev" class="ghost" type="button">ANTERIOR</button><button id="next" class="ghost" type="button">PRÓXIMA</button></div></div>
-        </section>
-        <section id="structure-view" class="view hidden"><div id="structure-grid"></div></section>
-        <section id="relations-view" class="view hidden"><div id="relations-grid"></div></section>
-      </section>
-    </section>
-
-    <section class="panel activity-panel">
-      <div class="panel-head"><div><p class="eyebrow">AUDITORIA</p><h2>Movimentações recentes</h2></div><span>ÚLTIMAS 100</span></div>
-      <div id="activity" class="activity"><p class="muted">Sem eventos registrados.</p></div>
-    </section>
-    <p class="footnote">Campos de credenciais, referências de pagamento, dados pessoais criptografados e identificadores de usuários/endereço são ocultados. O monitor é público e somente leitura.</p>
   </main>
 </body>
 </html>
