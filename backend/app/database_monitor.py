@@ -204,3 +204,58 @@ def create_monitor_router(engine, admin_dependency):
         }
 
     return router
+
+
+def install_audit_triggers(engine) -> None:
+    """Create a lightweight audit log and AFTER triggers for every application table."""
+    inspector = inspect(engine)
+    table_names = [name for name in inspector.get_table_names() if name not in SKIP_TABLES]
+    with engine.begin() as conn:
+        conn.exec_driver_sql("""
+            CREATE TABLE IF NOT EXISTS database_activity (
+                id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                table_name VARCHAR(128) NOT NULL,
+                operation VARCHAR(10) NOT NULL,
+                record_id VARCHAR(255) NULL,
+                summary VARCHAR(255) NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                INDEX ix_database_activity_created_at (created_at),
+                INDEX ix_database_activity_table_name (table_name)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
+        existing = {
+            row[0] for row in conn.exec_driver_sql(
+                "SELECT TRIGGER_NAME FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE()"
+            ).all()
+        }
+        for table in table_names:
+            primary = inspector.get_pk_constraint(table).get("constrained_columns") or []
+            record_expr = (
+                "CONCAT_WS(':', " + ", ".join(
+                    f"CAST(NEW.`{column}` AS CHAR)" for column in primary
+                ) + ")"
+                if primary else "NULL"
+            )
+            old_record_expr = (
+                "CONCAT_WS(':', " + ", ".join(
+                    f"CAST(OLD.`{column}` AS CHAR)" for column in primary
+                ) + ")"
+                if primary else "NULL"
+            )
+            for operation, timing, row_ref, id_expr in (
+                ("INSERT", "INSERT", "NEW", record_expr),
+                ("UPDATE", "UPDATE", "NEW", record_expr),
+                ("DELETE", "DELETE", "OLD", old_record_expr),
+            ):
+                trigger_name = f"trg_audit_{table}_{operation.lower()}"
+                if trigger_name in existing:
+                    continue
+                safe_trigger = _identifier(trigger_name)
+                safe_table = _identifier(table)
+                summary = f"CONCAT('{operation} em {table} · registro ', COALESCE({id_expr}, 'sem chave'))"
+                conn.exec_driver_sql(
+                    f"CREATE TRIGGER {safe_trigger} AFTER {timing} ON {safe_table} "
+                    f"FOR EACH ROW INSERT INTO database_activity "
+                    f"(table_name, operation, record_id, summary) "
+                    f"VALUES ('{table}', '{operation}', {id_expr}, {summary})"
+                )
