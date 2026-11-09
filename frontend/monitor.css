@@ -10,3 +10,28 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .tab.active{background:#171717;border-bottom-color:#fff;color:#fff}
 .toolbar input{font:inherit;background:#090909;border:1px solid #444;color:#eee;padding:10px 12px;border-radius:0}
 .table-item{appearance:none;-webkit-appearance:none;border-radius:0}
+
+
+/* Dashboard principal: números do negócio em primeiro plano. */
+.overview{margin:30px 0 26px}
+.overview-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:15px}
+.overview-heading h2{font-size:24px;margin:0;letter-spacing:-.03em}
+.overview-heading>p{margin:0;color:#777;font-size:11px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0;background:transparent}
+.metric{position:relative;overflow:hidden;min-height:168px;padding:22px 24px;background:linear-gradient(145deg,#17191d,#101114);border:1px solid #292c32;border-radius:12px;transition:border-color .2s,transform .2s}
+.metric:hover{border-color:#484d56;transform:translateY(-2px)}
+.metric:after{content:"";position:absolute;inset:auto 0 0;height:3px;background:var(--metric-accent)}
+.metric-users{--metric-accent:#70a7ff;--metric-soft:rgba(112,167,255,.13)}
+.metric-products{--metric-accent:#69d5a2;--metric-soft:rgba(105,213,162,.13)}
+.metric-orders{--metric-accent:#c49aff;--metric-soft:rgba(196,154,255,.13)}
+.metric-top{display:flex;align-items:center;gap:11px}
+.metric-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--metric-soft);color:var(--metric-accent);font-size:18px}
+.metric-label{font-size:13px;font-weight:600;color:#d8dbe1}
+.metric strong{display:block;margin:18px 0 3px;font-size:clamp(32px,4vw,42px);line-height:1;font-weight:700;letter-spacing:-.05em;color:#fff;font-variant-numeric:tabular-nums}
+.metric small{font-size:11px;color:#858b96;letter-spacing:0}
+.database-meta{display:flex;flex-wrap:wrap;gap:9px 22px;padding:13px 2px 0;color:#818792;font-size:10px}
+.database-meta span{display:flex;align-items:center;gap:7px}
+.database-meta i{width:4px;height:4px;border-radius:50%;background:#626a76}
+.database-meta strong{color:#c3c8d0;font-weight:600}
+@media(max-width:760px){.metrics{grid-template-columns:1fr}.metric{min-height:140px}.metric strong{margin-top:13px}.overview-heading{align-items:start;flex-direction:column;gap:7px}}
+@media(min-width:761px) and (max-width:1050px){.metrics{gap:9px}.metric{padding:18px}.metric strong{font-size:32px}}
