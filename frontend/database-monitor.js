@@ -1,6 +1,7 @@
 (() => {
   const localHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-  const apiBase = window.API_BASE_URL || (localHost ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1` : `${window.location.origin}/api/v1`);
+  const localFrontend = localHost || window.location.port === '5500';
+  const apiBase = window.API_BASE_URL || (localFrontend ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1` : `${window.location.origin}/api/v1`);
   const $ = (selector) => document.querySelector(selector);
   const state = { table: null, offset: 0, limit: 50, total: 0, q: '', tab: 'data', sort: null, direction: 'asc' };
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
