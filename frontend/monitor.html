@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Passo Certo — Explorador MySQL</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="monitor.css?v=20261109-2">
-  <script src="database-monitor.js?v=20261109-2" defer></script>
+  <link rel="stylesheet" href="monitor.css?v=20261109-3">
+  <script src="database-monitor.js?v=20261109-3" defer></script>
 </head>
 <body>
   <header>
@@ -23,7 +23,14 @@
       <div id="connection" class="status"><i></i> CONECTANDO</div>
     </section>
 
-    <section id="metrics" class="metrics"></section>
+    <section class="overview">
+      <div class="overview-heading">
+        <div><p class="eyebrow">RESUMO DO SISTEMA</p><h2>Visão geral da loja</h2></div>
+        <p>Indicadores atualizados automaticamente</p>
+      </div>
+      <section id="metrics" class="metrics" aria-label="Indicadores principais"></section>
+      <div id="database-meta" class="database-meta"></div>
+    </section>
 
     <section class="workspace">
       <aside class="panel navigator">
