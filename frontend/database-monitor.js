@@ -15,7 +15,7 @@
 
   function connection(ok, message = '') {
     $('#connection').className = `status ${ok ? 'online' : 'offline'}`;
-    $('#connection').innerHTML = `<i></i> ${ok ? 'ADMINISTRADOR · CONECTADO' : esc(message || 'SEM CONEXÃO')}`;
+    $('#connection').innerHTML = `<i></i> ${ok ? 'MONITOR PÚBLICO · CONECTADO' : esc(message || 'SEM CONEXÃO')}`;
   }
 
   async function loadOverview() {
@@ -38,7 +38,7 @@
     } catch (error) {
       console.error('[Database Monitor] Falha ao carregar o resumo:', error);
       connection(false, error.message);
-      $('#metrics').innerHTML = '<p class="error">Não foi possível carregar. Entre com uma conta administradora na loja e tente novamente.</p>';
+      $('#metrics').innerHTML = '<p class="error">Não foi possível carregar o monitor. Verifique se a API está disponível.</p>';
     }
   }
 
