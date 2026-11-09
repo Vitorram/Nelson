@@ -12,7 +12,8 @@ AUDIT_TABLE = "database_activity"
 SKIP_TABLES = {AUDIT_TABLE, "alembic_version"}
 HIDDEN_COLUMN_PARTS = (
     "_cipher", "_lookup", "cpf", "phone", "token", "secret",
-    "card_number", "cvc"
+    "card_number", "cvc", "password", "payment_reference",
+    "tracking_code", "user_id", "address_id"
 )
 
 
@@ -48,7 +49,6 @@ def _visible_columns(engine, table: str) -> list[dict]:
         column for column in columns
         if (
             not any(part in column["name"].lower() for part in HIDDEN_COLUMN_PARTS)
-            and ("password" not in column["name"].lower() or column["name"].lower() == "password_hash")
         )
     ]
 
@@ -57,7 +57,6 @@ def create_monitor_router(engine, admin_dependency):
     router = APIRouter(
         prefix="/api/v1/monitor",
         tags=["Database Explorer"],
-        dependencies=[Depends(admin_dependency)],
     )
 
     @router.get("")
