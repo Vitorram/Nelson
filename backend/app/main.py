@@ -22,7 +22,7 @@ from sqlalchemy import (Boolean, DateTime, ForeignKey, Integer, Numeric, String,
                         Text, UniqueConstraint, create_engine, select, func, inspect, text)
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
-from app.database_monitor import create_monitor_router
+from app.database_monitor import create_monitor_router, install_audit_triggers
 
 
 load_dotenv()
@@ -318,6 +318,11 @@ login_attempts: dict[str, deque[float]] = defaultdict(deque)
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(engine)
+    try:
+        install_audit_triggers(engine)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Não foi possível instalar a auditoria do banco de dados")
     product_columns = {column["name"] for column in inspect(engine).get_columns("products")}
     product_additions = {
         "image_url": "VARCHAR(500) NOT NULL DEFAULT ''",
