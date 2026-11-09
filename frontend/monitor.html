@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Passo Certo — Monitor do Banco</title>
+  <title>Passo Certo — Explorador MySQL</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="monitor.css">
   <script src="database-monitor.js" defer></script>
@@ -13,36 +13,52 @@
     <a class="brand" href="index.html"><img src="logo.svg" alt=""> PASSO <b>CERTO</b></a>
     <a class="back" href="index.html">← Voltar para a loja</a>
   </header>
-
   <main>
     <section class="hero">
       <div>
-        <p class="eyebrow">DATABASE / LIVE MONITOR</p>
-        <h1>Monitor do Banco</h1>
-        <p>Acompanhe as movimentações do MySQL em tempo real. A tela é somente leitura e não expõe dados sensíveis.</p>
+        <p class="eyebrow">DATABASE / ADMIN EXPLORER</p>
+        <h1>Explorador do Banco</h1>
+        <p>Inspecione tabelas, estrutura, índices, relacionamentos e registros do MySQL. Acesso administrativo e consultas somente leitura.</p>
       </div>
       <div id="connection" class="status"><i></i> CONECTANDO</div>
     </section>
 
     <section id="metrics" class="metrics"></section>
 
-    <section class="grid">
-      <article class="panel tables-panel">
-        <div class="panel-head"><div><p class="eyebrow">ESTRUTURA</p><h2>Tabelas</h2></div><span id="updated">--</span></div>
-        <div id="tables" class="tables"></div>
-      </article>
+    <section class="workspace">
+      <aside class="panel navigator">
+        <div class="panel-head"><div><p class="eyebrow">SCHEMA</p><h2>Tabelas</h2></div><button id="refresh" class="ghost" type="button">ATUALIZAR</button></div>
+        <div id="tables" class="tables"><p class="muted">Carregando...</p></div>
+      </aside>
 
-      <article class="panel activity-panel">
-        <div class="panel-head"><div><p class="eyebrow">AUDITORIA</p><h2>Últimas movimentações</h2></div><span>2s</span></div>
-        <div class="filters">
-          <button class="filter active" data-filter="ALL">TODAS</button>
-          <button class="filter" data-filter="INSERT">INSERT</button>
-          <button class="filter" data-filter="UPDATE">UPDATE</button>
-          <button class="filter" data-filter="DELETE">DELETE</button>
+      <section class="panel explorer">
+        <div class="panel-head selected-head">
+          <div><p class="eyebrow">TABLE INSPECTOR</p><h2 id="selected-table">Selecione uma tabela</h2></div>
+          <span id="table-count"></span>
         </div>
-        <div id="activity" class="activity"></div>
-      </article>
+        <div class="tabs">
+          <button class="tab active" data-tab="data" type="button">Dados</button>
+          <button class="tab" data-tab="structure" type="button">Estrutura</button>
+          <button class="tab" data-tab="relations" type="button">Relacionamentos</button>
+        </div>
+        <section id="data-view" class="view">
+          <div class="toolbar">
+            <input id="search" type="search" placeholder="Pesquisar nos campos..." aria-label="Pesquisar nos campos">
+            <button id="search-button" class="action" type="button">PESQUISAR</button>
+          </div>
+          <div id="data-grid" class="table-scroll"><p class="muted">Escolha uma tabela à esquerda.</p></div>
+          <div class="pagination"><span id="page-info"></span><div><button id="prev" class="ghost" type="button">ANTERIOR</button><button id="next" class="ghost" type="button">PRÓXIMA</button></div></div>
+        </section>
+        <section id="structure-view" class="view hidden"><div id="structure-grid"></div></section>
+        <section id="relations-view" class="view hidden"><div id="relations-grid"></div></section>
+      </section>
     </section>
+
+    <section class="panel activity-panel">
+      <div class="panel-head"><div><p class="eyebrow">AUDITORIA</p><h2>Movimentações recentes</h2></div><span>ÚLTIMAS 100</span></div>
+      <div id="activity" class="activity"><p class="muted">Sem eventos registrados.</p></div>
+    </section>
+    <p class="footnote">Campos de credenciais, dados pessoais criptografados e identificadores sensíveis são ocultados. Hashes de senha são exibidos sem transformação.</p>
   </main>
 </body>
 </html>
