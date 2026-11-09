@@ -12,7 +12,7 @@ AUDIT_TABLE = "database_activity"
 SKIP_TABLES = {AUDIT_TABLE, "alembic_version"}
 HIDDEN_COLUMN_PARTS = (
     "_cipher", "_lookup", "cpf", "phone", "token", "secret",
-    "card_number", "cvc", "password"
+    "card_number", "cvc"
 )
 
 
