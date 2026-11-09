@@ -36,6 +36,7 @@
         <div class="activity-row"><b class="${esc(item.operation.toLowerCase())}">${esc(item.operation)}</b><strong>${esc(item.table)}</strong><span>${esc(item.summary)}</span><time>${esc(new Date(item.created_at).toLocaleString('pt-BR'))}</time></div>`).join('') : '<p class="muted">Ainda não há auditoria registrada no banco.</p>';
       document.querySelectorAll('.table-item').forEach(button => button.addEventListener('click', () => selectTable(button.dataset.table)));
     } catch (error) {
+      console.error('[Database Monitor] Falha ao carregar o resumo:', error);
       connection(false, error.message);
       $('#metrics').innerHTML = '<p class="error">Não foi possível carregar. Entre com uma conta administradora na loja e tente novamente.</p>';
     }
@@ -104,7 +105,18 @@
   $('#search').addEventListener('keydown', event => { if (event.key === 'Enter') $('#search-button').click(); });
   $('#prev').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); loadRows().catch(showError); });
   $('#next').addEventListener('click', () => { if (state.offset + state.limit < state.total) state.offset += state.limit; loadRows().catch(showError); });
-  loadOverview();
+  window.addEventListener('error', (event) => {
+    console.error('[Database Monitor] Erro no navegador:', event.error || event.message);
+    const target = $('#metrics');
+    if (target && !target.textContent.trim()) target.innerHTML = '<p class="error">O monitor encontrou um erro ao iniciar. Atualize a página com Ctrl + Shift + R e confira o Console.</p>';
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('[Database Monitor] Falha assíncrona:', event.reason);
+  });
+  loadOverview().catch((error) => {
+    console.error('[Database Monitor] Falha na inicialização:', error);
+    connection(false, error.message);
+  });
   window.setInterval(async () => {
     if (document.hidden) return;
     await loadOverview();
