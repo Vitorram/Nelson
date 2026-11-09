@@ -23,12 +23,27 @@
     try {
       const data = await api('/monitor');
       connection(true);
-      $('#metrics').innerHTML = [
-        ['Banco de dados', data.database, 'MYSQL SCHEMA'],
-        ['Versão MySQL', data.mysql_version, 'ENGINE'],
-        ['Tabelas', data.tables.length, 'SCHEMA'],
-        ['Registros', fmt(data.total_rows), 'TOTAL']
-      ].map(([label, value, meta]) => `<article class="metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${meta}</small></article>`).join('');
+      const normalized = (value) => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+      const countFor = (names) => {
+        const item = data.tables.find(table => names.includes(normalized(table.table)));
+        return item ? item.count : 0;
+      };
+      const indicators = [
+        { label: 'Usuários', value: countFor(['users', 'user', 'usuarios', 'usuario']), detail: 'contas cadastradas', icon: '♙', tone: 'users' },
+        { label: 'Produtos', value: countFor(['products', 'product', 'produtos', 'produto']), detail: 'itens no catálogo', icon: '▦', tone: 'products' },
+        { label: 'Compras', value: countFor(['orders', 'order', 'purchases', 'purchase', 'compras', 'compra', 'pedidos', 'pedido']), detail: 'pedidos registrados', icon: '🛒', tone: 'orders' }
+      ];
+      $('#metrics').innerHTML = indicators.map(item => `
+        <article class="metric metric-${item.tone}">
+          <div class="metric-top"><span class="metric-icon" aria-hidden="true">${item.icon}</span><span class="metric-label">${item.label}</span></div>
+          <strong>${fmt(item.value)}</strong>
+          <small>${item.detail}</small>
+        </article>`).join('');
+      $('#database-meta').innerHTML = `
+        <span><i></i> Banco <strong>${esc(data.database)}</strong></span>
+        <span><i></i> MySQL <strong>${esc(data.mysql_version)}</strong></span>
+        <span><i></i> Tabelas <strong>${fmt(data.tables.length)}</strong></span>
+        <span><i></i> Registros totais <strong>${fmt(data.total_rows)}</strong></span>`;
       $('#tables').innerHTML = data.tables.map(item => `
         <button class="table-item ${state.table === item.table ? 'active' : ''}" data-table="${esc(item.table)}" type="button">
           <span><i>▦</i>${esc(item.table)}</span><b>${fmt(item.count)}</b>
