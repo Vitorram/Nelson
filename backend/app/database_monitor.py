@@ -46,7 +46,10 @@ def _visible_columns(engine, table: str) -> list[dict]:
     columns = inspect(engine).get_columns(table)
     return [
         column for column in columns
-        if not any(part in column["name"].lower() for part in HIDDEN_COLUMN_PARTS)
+        if (
+            not any(part in column["name"].lower() for part in HIDDEN_COLUMN_PARTS)
+            and ("password" not in column["name"].lower() or column["name"].lower() == "password_hash")
+        )
     ]
 
 
