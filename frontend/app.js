@@ -1,5 +1,6 @@
 const localHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-const apiBase = window.API_BASE_URL || (localHost ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1` : `${window.location.origin}/api/v1`);
+const localFrontend = localHost || window.location.port === '5500';
+const apiBase = window.API_BASE_URL || (localFrontend ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1` : `${window.location.origin}/api/v1`);
 const state = { csrf: '', user: null, products: [], adminProducts: [], cart: [], cards: [], photos: [] };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
