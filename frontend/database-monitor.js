@@ -1,141 +1,57 @@
 (() => {
   const localHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
   const localFrontend = localHost || window.location.port === '5500';
-  const apiBase = window.API_BASE_URL || (localFrontend ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1` : `${window.location.origin}/api/v1`);
-  const $ = (selector) => document.querySelector(selector);
-  const state = { table: null, offset: 0, limit: 50, total: 0, q: '', tab: 'data', sort: null, direction: 'asc' };
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const apiBase = window.API_BASE_URL || (localFrontend
+    ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`
+    : `${window.location.origin}/api/v1`);
+  const metrics = document.querySelector('#metrics');
+  const connection = document.querySelector('#connection');
   const fmt = (value) => Number(value || 0).toLocaleString('pt-BR');
+  const normalize = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-  async function api(path) {
-    const response = await fetch(apiBase + path, { credentials: 'include', cache: 'no-store' });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
-    return data;
-  }
-
-  function connection(ok, message = '') {
-    $('#connection').className = `status ${ok ? 'online' : 'offline'}`;
-    $('#connection').innerHTML = `<i></i> ${ok ? 'MONITOR PÚBLICO · CONECTADO' : esc(message || 'SEM CONEXÃO')}`;
+  function setConnection(online, message = '') {
+    connection.className = `status ${online ? 'online' : 'offline'}`;
+    connection.innerHTML = `<i></i> ${online ? 'SISTEMA CONECTADO' : message || 'SEM CONEXÃO'}`;
   }
 
   async function loadOverview() {
     try {
-      const data = await api('/monitor');
-      connection(true);
-      const normalized = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const response = await fetch(`${apiBase}/monitor`, { cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
+
       const countFor = (names) => {
-        const item = data.tables.find(table => names.includes(normalized(table.table)));
-        return item ? item.count : 0;
+        const table = (data.tables || []).find(item => names.includes(normalize(item.table)));
+        return table ? table.count : 0;
       };
-      const indicators = [
+      const cards = [
         { label: 'Usuários', value: countFor(['users', 'user', 'usuarios', 'usuario']), detail: 'contas cadastradas', icon: '♙', tone: 'users' },
-        { label: 'Produtos', value: countFor(['products', 'product', 'produtos', 'produto']), detail: 'itens no catálogo', icon: '▦', tone: 'products' },
-        { label: 'Compras', value: countFor(['orders', 'order', 'purchases', 'purchase', 'compras', 'compra', 'pedidos', 'pedido']), detail: 'pedidos registrados', icon: '🛒', tone: 'orders' }
+        { label: 'Produtos', value: countFor(['products', 'product', 'produtos', 'produto']), detail: 'produtos cadastrados', icon: '▦', tone: 'products' },
+        { label: 'Ordens', value: countFor(['orders', 'order', 'ordens', 'ordem', 'pedidos', 'pedido', 'purchases', 'purchase', 'compras', 'compra']), detail: 'ordens de compra registradas', icon: '🛒', tone: 'orders' }
       ];
-      $('#metrics').innerHTML = indicators.map(item => `
-        <article class="metric metric-${item.tone}">
-          <div class="metric-top"><span class="metric-icon" aria-hidden="true">${item.icon}</span><span class="metric-label">${item.label}</span></div>
-          <strong>${fmt(item.value)}</strong>
-          <small>${item.detail}</small>
+
+      metrics.innerHTML = cards.map(card => `
+        <article class="metric metric-${card.tone}">
+          <div class="metric-top">
+            <span class="metric-icon" aria-hidden="true">${card.icon}</span>
+            <span class="metric-label">${card.label}</span>
+          </div>
+          <strong>${fmt(card.value)}</strong>
+          <small>${card.detail}</small>
         </article>`).join('');
-      $('#database-meta').innerHTML = `
-        <span><i></i> Banco <strong>${esc(data.database)}</strong></span>
-        <span><i></i> MySQL <strong>${esc(data.mysql_version)}</strong></span>
-        <span><i></i> Tabelas <strong>${fmt(data.tables.length)}</strong></span>
-        <span><i></i> Registros totais <strong>${fmt(data.total_rows)}</strong></span>`;
-      $('#tables').innerHTML = data.tables.map(item => `
-        <button class="table-item ${state.table === item.table ? 'active' : ''}" data-table="${esc(item.table)}" type="button">
-          <span><i>▦</i>${esc(item.table)}</span><b>${fmt(item.count)}</b>
-        </button>`).join('') || '<p class="muted">Nenhuma tabela disponível.</p>';
-      $('#activity').innerHTML = data.activity.length ? data.activity.map(item => `
-        <div class="activity-row"><b class="${esc(item.operation.toLowerCase())}">${esc(item.operation)}</b><strong>${esc(item.table)}</strong><span>${esc(item.summary)}</span><time>${esc(new Date(item.created_at).toLocaleString('pt-BR'))}</time></div>`).join('') : '<p class="muted">Ainda não há auditoria registrada no banco.</p>';
-      document.querySelectorAll('.table-item').forEach(button => button.addEventListener('click', () => selectTable(button.dataset.table)));
+      setConnection(true);
     } catch (error) {
-      console.error('[Database Monitor] Falha ao carregar o resumo:', error);
-      connection(false, error.message);
-      $('#metrics').innerHTML = '<p class="error">Não foi possível carregar o monitor. Verifique se a API está disponível.</p>';
+      console.error('[Database Monitor] Falha ao carregar indicadores:', error);
+      setConnection(false, 'ERRO AO CONECTAR');
+      metrics.innerHTML = '<p class="error">Não foi possível carregar os indicadores. Verifique se a API está disponível.</p>';
     }
   }
 
-  async function selectTable(table) {
-    state.table = table; state.offset = 0; state.sort = null; state.q = ''; $('#search').value = '';
-    $('#selected-table').textContent = table;
-    await loadOverview();
-    await loadCurrentTab();
-  }
-
-  async function loadRows() {
-    const params = new URLSearchParams({limit: state.limit, offset: state.offset});
-    if (state.q) params.set('q', state.q);
-    if (state.sort) { params.set('sort', state.sort); params.set('direction', state.direction); }
-    const data = await api(`/monitor/tables/${encodeURIComponent(state.table)}/rows?${params}`);
-    state.total = data.total;
-    $('#table-count').textContent = `${fmt(data.total)} REGISTROS`;
-    if (!data.rows.length) { $('#data-grid').innerHTML = '<p class="muted">Nenhum registro encontrado.</p>'; }
-    else {
-      $('#data-grid').innerHTML = `<table><thead><tr>${data.columns.map(col => `<th><button class="sort" data-sort="${esc(col)}" type="button">${esc(col)} ${state.sort === col ? (state.direction === 'asc' ? '↑' : '↓') : '↕'}</button></th>`).join('')}</tr></thead><tbody>${data.rows.map(row => `<tr>${data.columns.map(col => `<td title="${esc(row[col])}">${esc(row[col])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-      document.querySelectorAll('[data-sort]').forEach(button => button.addEventListener('click', () => {
-        const col = button.dataset.sort;
-        state.direction = state.sort === col && state.direction === 'asc' ? 'desc' : 'asc';
-        state.sort = col; loadRows().catch(showError);
-      }));
-    }
-    const start = data.total ? state.offset + 1 : 0;
-    $('#page-info').textContent = `${fmt(start)}–${fmt(Math.min(state.offset + data.rows.length, data.total))} de ${fmt(data.total)}`;
-    $('#prev').disabled = state.offset === 0;
-    $('#next').disabled = state.offset + state.limit >= data.total;
-  }
-
-  async function loadStructure() {
-    const data = await api(`/monitor/tables/${encodeURIComponent(state.table)}/structure`);
-    $('#structure-grid').innerHTML = `<h3>Colunas</h3><div class="table-scroll"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Nulo</th><th>Chave</th><th>Default</th></tr></thead><tbody>${data.columns.map(col => `<tr><td>${esc(col.name)}</td><td><code>${esc(col.type)}</code></td><td>${col.nullable ? 'SIM' : 'NÃO'}</td><td>${col.primary_key ? 'PRIMARY KEY' : col.foreign_key ? 'FOREIGN KEY' : '—'}</td><td>${esc(col.default ?? '—')}</td></tr>`).join('')}</tbody></table></div><h3>Índices</h3>${data.indexes.length ? `<div class="table-scroll"><table><thead><tr><th>Índice</th><th>Colunas</th><th>Único</th></tr></thead><tbody>${data.indexes.map(i => `<tr><td>${esc(i.name)}</td><td>${esc(i.columns.join(', '))}</td><td>${i.unique ? 'SIM' : 'NÃO'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nenhum índice adicional.</p>'}<h3>Restrições únicas</h3>${data.unique_constraints.length ? `<div class="table-scroll"><table><thead><tr><th>Restrição</th><th>Colunas</th></tr></thead><tbody>${data.unique_constraints.map(item => `<tr><td>${esc(item.name || '—')}</td><td>${esc(item.columns.join(', '))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nenhuma restrição UNIQUE adicional.</p>'}`;
-  }
-
-  async function loadRelations() {
-    const data = await api(`/monitor/tables/${encodeURIComponent(state.table)}/structure`);
-    $('#relations-grid').innerHTML = data.foreign_keys.length ? data.foreign_keys.map(fk => `
-      <div class="relation"><strong>${esc(state.table)}.${esc(fk.columns.join(', '))}</strong><span>→</span><strong>${esc(fk.references_table)}.${esc(fk.references_columns.join(', '))}</strong></div>`).join('') : '<p class="muted">Esta tabela não possui chaves estrangeiras declaradas.</p>';
-  }
-
-  async function loadCurrentTab() {
-    if (!state.table) return;
-    try {
-      $('.tabs').classList.remove('hidden');
-      document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
-      $(`#${state.tab}-view`).classList.remove('hidden');
-      if (state.tab === 'data') await loadRows();
-      if (state.tab === 'structure') await loadStructure();
-      if (state.tab === 'relations') await loadRelations();
-    } catch (error) { showError(error); }
-  }
-
-  function showError(error) { $('#data-grid').innerHTML = `<p class="error">${esc(error.message)}</p>`; }
-  document.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
-    state.tab = button.dataset.tab;
-    document.querySelectorAll('[data-tab]').forEach(item => item.classList.toggle('active', item === button));
-    loadCurrentTab();
-  }));
-  $('#refresh').addEventListener('click', () => loadOverview().then(loadCurrentTab));
-  $('#search-button').addEventListener('click', () => { state.q = $('#search').value.trim(); state.offset = 0; loadRows().catch(showError); });
-  $('#search').addEventListener('keydown', event => { if (event.key === 'Enter') $('#search-button').click(); });
-  $('#prev').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); loadRows().catch(showError); });
-  $('#next').addEventListener('click', () => { if (state.offset + state.limit < state.total) state.offset += state.limit; loadRows().catch(showError); });
-  window.addEventListener('error', (event) => {
+  window.addEventListener('error', event => {
     console.error('[Database Monitor] Erro no navegador:', event.error || event.message);
-    const target = $('#metrics');
-    if (target && !target.textContent.trim()) target.innerHTML = '<p class="error">O monitor encontrou um erro ao iniciar. Atualize a página com Ctrl + Shift + R e confira o Console.</p>';
   });
-  window.addEventListener('unhandledrejection', (event) => {
-    console.error('[Database Monitor] Falha assíncrona:', event.reason);
-  });
-  loadOverview().catch((error) => {
-    console.error('[Database Monitor] Falha na inicialização:', error);
-    connection(false, error.message);
-  });
-  window.setInterval(async () => {
-    if (document.hidden) return;
-    await loadOverview();
-    if (state.table && state.tab === 'data') await loadRows().catch(showError);
+  loadOverview();
+  window.setInterval(() => {
+    if (!document.hidden) loadOverview();
   }, 5000);
 })();
