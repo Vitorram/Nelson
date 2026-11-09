@@ -311,7 +311,14 @@ def admin_order_json(order: Order, user: User, address: Address):
 app = FastAPI(title="Passo Certo API", version="1.0.0", docs_url="/docs", redoc_url=None)
 app.include_router(create_monitor_router(engine, admin))
 origins = [x.strip() for x in os.getenv("FRONTEND_ORIGINS", "http://localhost:5500,http://127.0.0.1:5500").split(",") if x.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["Content-Type", "X-CSRF-Token"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r"^http://(localhost|127\\.0\\.0\\.1|10(?:\\.\\d{1,3}){3}|192\\.168(?:\\.\\d{1,3}){2}|172\\.(?:1[6-9]|2\\d|3[01])(?:\\.\\d{1,3}){2}):5500$",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Content-Type", "X-CSRF-Token"],
+)
 login_attempts: dict[str, deque[float]] = defaultdict(deque)
 
 
