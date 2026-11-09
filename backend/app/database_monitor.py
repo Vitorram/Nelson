@@ -252,9 +252,25 @@ def install_audit_triggers(engine) -> None:
                 safe_trigger = _identifier(trigger_name)
                 safe_table = _identifier(table)
                 summary = f"CONCAT('{operation} em {table} · registro ', COALESCE({id_expr}, 'sem chave'))"
-                conn.exec_driver_sql(
-                    f"CREATE TRIGGER {safe_trigger} AFTER {timing} ON {safe_table} "
-                    f"FOR EACH ROW INSERT INTO database_activity "
-                    f"(table_name, operation, record_id, summary) "
-                    f"VALUES ('{table}', '{operation}', {id_expr}, {summary})"
-                )
+                try:
+                    conn.exec_driver_sql(
+                        f"CREATE TRIGGER {safe_trigger} AFTER {timing} ON {safe_table} "
+                        f"FOR EACH ROW INSERT INTO database_activity "
+                        f"(table_name, operation, record_id, summary) "
+                        f"VALUES ('{table}', '{operation}', {id_expr}, {summary})"
+                    )
+                except SQLAlchemyError as exc:
+                    # Managed MySQL instances often enable binary logging but do
+                    # not grant SUPER / SET_USER_ID to the application account.
+                    # Keep the public read-only monitor available even when
+                    # automatic audit-trigger installation is not permitted.
+                    error_code = getattr(getattr(exc, "orig", None), "args", [None])[0]
+                    if error_code == 1419:
+                        import logging
+                        logging.getLogger(__name__).warning(
+                            "Auditoria por triggers desativada: MySQL exige privilégios "
+                            "administrativos com binary logging ativo. O monitor somente "
+                            "leitura continuará disponível."
+                        )
+                        return
+                    raise
