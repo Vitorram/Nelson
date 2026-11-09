@@ -1,5 +1,6 @@
 (() => {
-  const apiBase = window.API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+  const localHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const apiBase = window.API_BASE_URL || (localHost ? `${window.location.protocol}//${window.location.hostname}:8000/api/v1` : `${window.location.origin}/api/v1`);
   const $ = (selector) => document.querySelector(selector);
   const state = { table: null, offset: 0, limit: 50, total: 0, q: '', tab: 'data', sort: null, direction: 'asc' };
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -71,7 +72,7 @@
 
   async function loadStructure() {
     const data = await api(`/monitor/tables/${encodeURIComponent(state.table)}/structure`);
-    $('#structure-grid').innerHTML = `<h3>Colunas</h3><div class="table-scroll"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Nulo</th><th>Chave</th><th>Default</th></tr></thead><tbody>${data.columns.map(col => `<tr><td>${esc(col.name)}</td><td><code>${esc(col.type)}</code></td><td>${col.nullable ? 'SIM' : 'NÃO'}</td><td>${col.primary_key ? 'PRIMARY KEY' : col.foreign_key ? 'FOREIGN KEY' : '—'}</td><td>${esc(col.default ?? '—')}</td></tr>`).join('')}</tbody></table></div><h3>Índices</h3>${data.indexes.length ? `<div class="table-scroll"><table><thead><tr><th>Índice</th><th>Colunas</th><th>Único</th></tr></thead><tbody>${data.indexes.map(i => `<tr><td>${esc(i.name)}</td><td>${esc(i.columns.join(', '))}</td><td>${i.unique ? 'SIM' : 'NÃO'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nenhum índice adicional.</p>'}`;
+    $('#structure-grid').innerHTML = `<h3>Colunas</h3><div class="table-scroll"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Nulo</th><th>Chave</th><th>Default</th></tr></thead><tbody>${data.columns.map(col => `<tr><td>${esc(col.name)}</td><td><code>${esc(col.type)}</code></td><td>${col.nullable ? 'SIM' : 'NÃO'}</td><td>${col.primary_key ? 'PRIMARY KEY' : col.foreign_key ? 'FOREIGN KEY' : '—'}</td><td>${esc(col.default ?? '—')}</td></tr>`).join('')}</tbody></table></div><h3>Índices</h3>${data.indexes.length ? `<div class="table-scroll"><table><thead><tr><th>Índice</th><th>Colunas</th><th>Único</th></tr></thead><tbody>${data.indexes.map(i => `<tr><td>${esc(i.name)}</td><td>${esc(i.columns.join(', '))}</td><td>${i.unique ? 'SIM' : 'NÃO'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nenhum índice adicional.</p>'}<h3>Restrições únicas</h3>${data.unique_constraints.length ? `<div class="table-scroll"><table><thead><tr><th>Restrição</th><th>Colunas</th></tr></thead><tbody>${data.unique_constraints.map(item => `<tr><td>${esc(item.name || '—')}</td><td>${esc(item.columns.join(', '))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nenhuma restrição UNIQUE adicional.</p>'}`;
   }
 
   async function loadRelations() {
@@ -104,4 +105,9 @@
   $('#prev').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); loadRows().catch(showError); });
   $('#next').addEventListener('click', () => { if (state.offset + state.limit < state.total) state.offset += state.limit; loadRows().catch(showError); });
   loadOverview();
+  window.setInterval(async () => {
+    if (document.hidden) return;
+    await loadOverview();
+    if (state.table && state.tab === 'data') await loadRows().catch(showError);
+  }, 5000);
 })();
